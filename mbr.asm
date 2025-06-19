@@ -1,34 +1,29 @@
-org 0x7c00
-bits 16
-
-_start:
-    jmp main
-
+[BITS 16]
+[ORG 7C00h]
+    jmp     main
 main:
-    cli
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov sp, 0x7c00
+    xor     ax, ax     ; DS=0
+    mov     ds, ax
+    cld                ; DF=0 because our LODSB requires it
+    mov     ax, 0012h  ; Select 640x480 16-color graphics video mode
+    int     10h
+    mov     si, string
+    mov     bl, 4      ; Red
+    call    printstr
+    jmp     $
 
-    mov si, msg
-    call print
-
-hang:
-    jmp hang
-
+printstr:
+    mov     bh, 0     ; DisplayPage
 print:
     lodsb
-    or al, al
-    jz done
-    mov ah, 0x0E
-    int 0x10
-    jmp print
-
+    cmp     al, 0
+    je      done
+    mov     ah, 0Eh   ; BIOS.Teletype
+    int     10h
+    jmp     print
 done:
     ret
 
-msg db "Nostalgia got you, and you cant do anything about it", 0
+string db "Nostalgia got you, and you cant do anything about it.", 0
 times 510 - ($-$$) db 0
-dw 0xaa55
+dw      0AA55h
